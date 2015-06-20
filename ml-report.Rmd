@@ -1,0 +1,141 @@
+---
+title: "Coursera Practical Machine Learning - Course Project"
+author: "by romkhot"
+output:
+  html_document:
+    fig_height: 9
+    fig_width: 9
+  word_document: default
+---
+
+## 1. Introduction  
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).  
+
+In this project, we will use data from accelerometers of 6 participants to predict the manner in which they did the exercise.  
+
+## 2. Data Preprocessing
+
+### 2.1. Load necessary packages
+```{r, cache = T}
+setwd("D:/DOCs/COURSERA/8 - Practical Machine Learning/Coursera-Machine-Learning-CP")
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+library(corrplot)
+```
+### 2.2. Download the Data 
+```{r, cache = T}
+train_file <- "./data/pml-training.csv"
+test_file  <- "./data/pml-testing.csv"
+if (!file.exists(train_file)) {
+  download.file( url = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv",
+                 destfile = train_file )
+}
+if (!file.exists(test_file)) {
+  download.file( url = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", 
+                 destfile = test_file )
+}
+```  
+### 2.3. Getting the raw data
+After downloading the data from the data source, we can read the two csv files into two data frames.  
+```{r, cache = T}
+train_raw <- read.csv(train_file)
+test_raw <- read.csv(test_file)
+dim(train_raw)
+dim(test_raw)
+#head(train_raw)
+#head(test_raw)
+```
+Each data set contains 160 variables, the "classe" variable of training set is the outcome to predict. 
+Training data set contains 19622 observations, testing data set contains 20 observations. 
+
+### 2.4. Cleansing the data
+Clean up the data and remove observations with inappropriate values.
+```{r, cache = T}
+#number of complete cases:
+sum(complete.cases(train_raw))
+```
+First, let's remove the columns containing NA values.
+```{r, cache = T}
+train_raw <- train_raw[, colSums(is.na(train_raw)) == 0] 
+test_raw <- test_raw[, colSums(is.na(test_raw)) == 0] 
+```  
+Next, remove some columns that do not contribute much to the measurements.
+```{r, cache = T}
+#Class factor: 
+classe<- train_raw$classe
+#Clean up train set:
+train_remove <- grepl("^X|timestamp|window", names(train_raw))
+train_raw <- train_raw[, !train_remove]
+train_clean <- train_raw[, sapply(train_raw, is.numeric)]
+train_clean$classe <- classe
+#Clean up test set:
+test_remove <- grepl("^X|timestamp|window", names(test_raw))
+test_raw <- test_raw[, !test_remove]
+test_clean <- test_raw[, sapply(test_raw, is.numeric)]
+```
+The clean training set contains 19622 observations and 53 variables, the testing set contains 20 observations and 53 variables.
+
+### 2.5. Slice the data
+Then, we will split the cleaned training set into a pure training data set (70%) and a validation data set (30%). We will use the validation data set to conduct cross validation in future steps.  
+```{r, cache = T}
+set.seed(3377) # For reproducibility
+in_train <- createDataPartition(train_clean$classe, p=0.70, list=F)
+train_data <- train_clean[in_train, ]
+test_data <- train_clean[-in_train, ]
+```
+
+## 3. Data Modeling
+We will use the **Random Forest** algorithm as a predictive model for activity recognition. It automatically selects important variables and is robust to correlated covariates & outliers in general. We will use **5-fold cross validation** when applying the algorithm.  
+```{r, cache = T}
+control_rf <- trainControl(method="cv", 5)
+model_rf <- train( classe ~ ., data = train_data, method = "rf", trControl = control_rf, ntree = 250)
+model_rf
+```
+Then, on the validation set, we will estimate the model performance.  
+```{r, cache = T}
+predict_rf <- predict(model_rf, test_data)
+test_conf_matrix <- confusionMatrix(test_data$classe, predict_rf)
+```
+```{r, cache = T}
+accuracy <- postResample(predict_rf, test_data$classe)
+oose <- 1 - as.numeric(test_conf_matrix$overall[1])
+accuracy
+oose
+```
+As you we can see, the estimated accuracy of the model is 99.12%, the estimated error is 0.88%.
+
+## 4. Predicting for Test Data Set
+Now, we will apply the model to the original testing data downloaded from the data source. We remove the `problem_id` column first.  
+```{r, cache = T}
+result <- predict(model_rf, test_clean[, -length(names(test_clean))])
+result
+```  
+
+
+## 5. Appendix
+
+### 5.1. Figures
+#### 5.1.1. Matrix of Correlations
+```{r, cache = T}
+corrPlot <- cor(train_data[, -length(names(train_data))])
+corrplot(corrPlot, method="color")
+```
+#### 5.1.2. Decision Tree
+```{r, cache = T}
+tree_model <- rpart(classe ~ ., data=train_data, method="class")
+prp(tree_model) # fast plot
+```
+
+### 5.2. Generating data sets for submission
+```{r, cache = T}
+pml_result_files <- function(x){
+  n = length(x)
+  for(i in 1:n){
+    file = paste0("results/problem-",i,".txt")
+    write.table(x[i], file = file, quote = FALSE, row.names = FALSE, col.names = FALSE)
+  }
+}
+pml_result_files(result)
+``` 
