@@ -7,7 +7,7 @@ Practical Machine Learning - Course Project
 
 ### Assignment  
 Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about 
-personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of 
+personal activity relatively inexpensively. These type of devices are part of the quantified self movement â€“ a group of 
 enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, 
 or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, 
 but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, 
@@ -21,6 +21,6 @@ You should create a report describing how you built your model, how you used cro
 what you think the expected out of sample error is, and why you made the choices you did. 
 You will also use your prediction model to predict 20 different test cases.  
 
-Link to the page: [http://github.com/romkhot/Coursera-Machine-Learning-CP/ml-report.html](http://github.com/romkhot/Coursera-Machine-Learning-CP/ml-report.html)
+Link to the page: [https://github.com/romkhot/Coursera-Machine-Learning-CP/blob/master/ml-report.html](https://github.com/romkhot/Coursera-Machine-Learning-CP/blob/master/ml-report.html)
 
 
