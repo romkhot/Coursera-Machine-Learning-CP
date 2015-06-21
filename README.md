@@ -22,6 +22,6 @@ what you think the expected out of sample error is, and why you made the choices
 You will also use your prediction model to predict 20 different test cases.  
 
 ### Results
-Please see this page: [https://github.com/romkhot/Coursera-Machine-Learning-CP/blob/master/ml-report.html](https://github.com/romkhot/Coursera-Machine-Learning-CP/blob/master/ml-report.html)
+Please see this page: [http://romkhot.github.io/Coursera-Machine-Learning-CP/ml-report.html](http://romkhot.github.io/Coursera-Machine-Learning-CP/ml-report.html)
 
 
